@@ -29,7 +29,8 @@ def getData():
 #         data.append(pi.read(dp))
     return data
 
-app=Flask(__name__,template_folder='.',static_folder='.')
+app=Flask(__name__,template_folder='.',static_folder='static',static_url_path='/static')
+# 
 @app.route('/')
 
 def index():
@@ -44,9 +45,10 @@ def index():
     }
     #return render_template('rpi_index.html',**templateData)
     return render_template('rpi_webcontroller.html',**templateData)           
-
+# @app.route("/testjquery")
+# def testjquery():
+#     return app.send_static_file("jquery.min.js")
 @app.route('/<actionid>')
-
 def handleRequest(actionid):
     if not actionid == "favicon.ico":
         print("Button pressed: ",actionid)
@@ -77,13 +79,36 @@ def handleRequest(actionid):
                 piclock.transmitcount(timeuser,"up")
             else:
                 piclock.transmitcount(timeuser,"down")
-                
+        elif actionid == "getAPIdata":
+            print("Sending API data to HTML")
+            LS, HF, NS, ex = piclock.fetchAPIdata()
+            if ex == None:
+                ex = "No error"
+            return jsonify(text1=LS,
+                           text2=HF,
+                           text3=NS,
+                           text4=ex)
+        elif actionid == "setAPIdata":
+            print("Updating clock based on API data!")
+            LS, HF, NS, ex = piclock.fetchAPIdata()
+            if ex == None:
+                piclock.updateclockAPIdata(LS,HF,NS)
+            else:
+                print("Couldn't due to error")
+            
+        
     return "OK 200"   
                               
 if __name__=='__main__':
 #     os.system("sudo rm -r  ~/.cache/chromium/Default/Cache/*")
     piclock.resetclock()
     piclock.toggle10sectimer()
+    pi.write(piclock.redpin,1)
+    pi.write(piclock.greenpin,0)
+    pi.write(piclock.bluepin,0)
+    print(app.url_map)
+    print(app.static_folder)
+    print(os.path.exists(os.path.join(app.static_folder,"jquery.min.js")))
     app.run(debug=True, port=5000, host='0.0.0.0',threaded=True, use_reloader=False)
     #local web server http://192.168.1.200:5000/
     #after Port forwarding Manipulation http://xx.xx.xx.xx:5000/

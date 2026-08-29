@@ -6,9 +6,9 @@
             <meta http-equiv="content-type" content="text/html; charset=UTF-8">
             <meta name="apple-mobile-web-app-capable" content="yes" />
             <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-            <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+            
         </head>
-        
+        <script src="/static/jquery.min.js"></script>
         <body bgcolor = "#F3F4F6"> 
             <hr/><hr>
             <h1 style="color : #1F2937;"><center> RPi Wedstrijdklok Web Interface </center></h1>
@@ -35,9 +35,14 @@
             <center style="margin-bottom: 10px;"> <label for="toggle10sec">Toggle 10 sec countdown: </label> <button id="toggle10sec">10s</button></center>
             <center> <label for="timeuser">Count from this time: </label> <input type="time" id="timeuser" step="1"><button id="senduserup">Count up</button><button id="senduserdown">Count down</button></button></center>
             
-            
-            
             <h2> API controls </h2>
+            <center> Received API times: </center>
+            <center> <label for="currentLStime"> Last start: </label> <span id="currentLStime">--</span></center>
+            <center> <label for="currentHFbool">Heat finished: </label> <span id="currentHFbool">--</span></center>
+            <center> <label for="currentNStime">Next start: </label> <span id="currentNStime">--</span></center>
+            <center> <label for="getAPIdata">Fetch API data: </label> <button style="margin-left: 10px;" id="getAPIdata">&#x21C4;</button></center>
+            <center> <label for="setAPIdata">Count based on API data: </label> <button style="margin-left: 10px;" id="setAPIdata">&#x2713;</button></center>
+            <center> <label for="APIfetcherror">Error: </label> <span id="APIfetcherror">--</span></center>
             
             <script>
                   // API keys
@@ -71,7 +76,7 @@
                                     document.getElementById("currentNSkey").textContent = data.text3;
                               });
                   });
-                  // Controls
+                  // Manual controls
                   // Reset clock
                   document.getElementById("resetclock").addEventListener("click",function() {
                         $.getJSON("/resetclock", function(data) {
@@ -97,7 +102,25 @@
                               console.log(data);
                         });
                   });
-                
+                  // API Controls
+                  document.getElementById("getAPIdata").addEventListener("click",function() {
+                        fetch("/getAPIdata")
+                              .then(function(response) {
+                                    return response.json();
+                              })
+                              .then(function(data) {
+                                    console.log(data);
+                                    document.getElementById("currentLStime").textContent = data.text1;
+                                    document.getElementById("currentHFbool").textContent = data.text2;
+                                    document.getElementById("currentNStime").textContent = data.text3;
+                                    document.getElementById("APIfetcherror").textContent = data.text4;
+                              });
+                  });
+                  document.getElementById("setAPIdata").addEventListener("click",function() {
+                        $.getJSON("/setAPIdata", function(data) {
+                              console.log(data);
+                        });
+                  });
             </script>
     </body>
 </html>

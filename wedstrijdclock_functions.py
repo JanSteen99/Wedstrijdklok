@@ -18,9 +18,6 @@ from datetime import datetime, time, date
 import pigpio
 from ircodec.command import CommandSet
 
-# prevLS = datetime.now()
-# prevHF = None
-# prevNS = datetime.now()
 pi = pigpio.pi()
 clockremote = CommandSet.load('wedstrijdklokcommandos_v1.json')
 pi.write(bluepin,0)
@@ -73,7 +70,12 @@ def transmitcount(stringtime,direction):
     clockremote.emit('ok')
     return None
 
-def updateclockLSNS(LS,NS,HF):
+def updateclockAPIdata(LS,HF,NS):
+    # Updates clock based on last start, heat finished and next start
+    # Input:
+    # - LS: last start datetime.datetime
+    # - HF: heat finished bool
+    # - NS: next start datetime.datetime
     if HF:
         TTS = NS-datetime.now()
         direction = "down"
@@ -118,47 +120,36 @@ def fetchbool(url):
             if i == 0:
                 for subitem in item:
                     value = bool(int(subitem.text))
+        e = None
     except Exception as e:
         print(e)
         value = None
-    return value
+    return value, e
 
-# 
-# while True:
-#     update = False
-#     timesleep.sleep(5)
-#     baseURL = "http://"+hostip+"/_SLFCT/api/"
-#     LS = fetchtime(baseURL+APIkeyLS)
-#     HF = fetchbool(baseURL+APIkeyHF)
-#     NS = fetchtime(baseURL+APIkeyNS)
-# #     print(NS)
-# #     print(LS)
-# #     print(HF)
-#     if None in [LS,HF,NS]:
-#         print("Fetch failed")
-#         pi.write(redpin,0)
-#         pi.write(greenpin,0)
-#         pi.write(bluepin,1)   
-#         clockremote.emit('ok')
-#         clockremote.emit('clock')
-#     else:
-#         pi.write(redpin,0)
-#         pi.write(greenpin,1)
-#         pi.write(bluepin,0)
-#         if prevHF != HF:
-#             prevHF = HF
-#             update = True
-#         if prevLS != LS:
-#             prevLS = LS
-#             update = True
-#         if prevNS != NS:
-#             prevNS = NS
-#             update = True
-#         if update:
-#             ok = updateclock(LS,NS,HF)
-#             if not ok:
-#                 print("Clock update failed")
-#                 pi.write(redpin,1)
-#                 pi.write(greenpin,0)
-#                 pi.write(bluepin,0)
+
+def fetchAPIdata():
+    pi.write(redpin,0)
+    pi.write(greenpin,0)
+    pi.write(bluepin,0)
+    baseURL = "http://"+hostip+"/_SLFCT/api/"
+    LS,e1 = fetchtime(baseURL+APIkeyLS)
+    HF,e2 = fetchbool(baseURL+APIkeyHF)
+    NS,e3 = fetchtime(baseURL+APIkeyNS)
+    if not None in [e1,e2,e3]:
+        print("Connection failed")
+        pi.write(redpin,0)
+        pi.write(greenpin,0)
+        pi.write(bluepin,1)
+        if e1 != None:
+            return LS,HF,NS,e1
+        elif e2 != None:
+            return LS,HF,NS,e2
+        else:
+            return LS,HF,NS,e3
+    else:
+        pi.write(redpin,0)
+        pi.write(greenpin,1)
+        pi.write(bluepin,0)
+        return LS,HF,NS,None
+    
     
