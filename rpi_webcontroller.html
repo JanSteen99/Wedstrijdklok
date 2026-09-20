@@ -12,23 +12,20 @@
         <body bgcolor = "#F3F4F6"> 
             <hr/><hr>
             <h1 style="color : #1F2937;"><center> RPi Wedstrijdklok Web Interface </center></h1>
-            <h2><center><p>{{time}}</p></center></h2>
             <hr/><hr>
             
             <h2> API Keys </h2>
             
-            <center> <input type="text" id="inputLSkey" style="width: 500px;" placeholder="Enter API key last start here...">
-            <button id="sendLSkey">Send</button> </center>
-            <center> <input type="text" id="inputHFkey" style="width: 500px;" placeholder="Enter API key heat finished here...">
-            <button id="sendHFkey">Send</button> </center>
-            <center> <input type="text" id="inputNSkey" style="width: 500px;" placeholder="Enter API key next start here...">
-            <button id="sendNSkey">Send</button> </center>
+            <center> <input type="text" id="sendeventidinput" style="width: 500px;" placeholder="Enter custom event id here ...">
+            <button id="sendeventidbutton">Send</button> </center>
+            <center> <input type="text" id="sendAPIkeyinput" style="width: 500px;" placeholder="Enter custom API key here...">
+            <button id="sendAPIkeybutton">Send</button> </center>
             
-            <center> Current API keys </center> 
-            <center> <label for="currentLSkey"> Last start: </label> <span id="currentLSkey">--</span></center>
-            <center> <label for="currentHFkey">Heat finished: </label> <span id="currentHFkey">--</span></center>
-            <center> <label for="currentNSkey">Next start: </label> <span id="currentNSkey">--</span></center>
-            <center> <label for="getkeys">Show current API keys: </label> <button style="margin-left: 10px;" id="getkeys">&#x21C4;</button></center>
+            <center> Current event id and API key </center> 
+            <center> <label for="currenteventidbox"> Event id: </label> <span id="currenteventidbox">--</span></center>
+            <center> <label for="currentAPIkeybox">API key: </label> <span id="currentAPIkeybox">--</span></center>
+            <center> <label for="showkeyidbutton">Display current id and key: </label> <button style="margin-left: 10px;" id="showkeyidbutton">&#x21C4;</button></center>
+            <center> <label for="fetchkeyidbutton">Fetch new id and key: </label> <button style="margin-left: 10px;" id="fetchkeyidbutton">&#x21C4;</button></center>
             
             <h2> Manual controls </h2>
             <center style="margin-bottom: 10px;"> <label for="resetclock">Reset clock to show current time: </label> <button id="resetclock">&#8635;</button></center>
@@ -36,46 +33,43 @@
             <center> <label for="timeuser">Count from this time: </label> <input type="time" id="timeuser" step="1"><button id="senduserup">Count up</button><button id="senduserdown">Count down</button></button></center>
             
             <h2> API controls </h2>
-            <center> Received API times: </center>
-            <center> <label for="currentLStime"> Last start: </label> <span id="currentLStime">--</span></center>
+            <center> <label> <input type="checkbox" id="autoAPIupdatecheckbox"> Update clock automatically with API</label> </center>
+            <center> Current API data: </center>
             <center> <label for="currentHFbool">Heat finished: </label> <span id="currentHFbool">--</span></center>
-            <center> <label for="currentNStime">Next start: </label> <span id="currentNStime">--</span></center>
-            <center> <label for="getAPIdata">Fetch API data: </label> <button style="margin-left: 10px;" id="getAPIdata">&#x21C4;</button></center>
-            <center> <label for="setAPIdata">Count based on API data: </label> <button style="margin-left: 10px;" id="setAPIdata">&#x2713;</button></center>
-            <center> <label for="APIfetcherror">Error: </label> <span id="APIfetcherror">--</span></center>
+            <center> <label for="currentHCUtime">Heat count up: </label> <span id="currentHCUtime">--</span></center>
+            <center> <label for="currentHCDtime">Heat count down: </label> <span id="currentHCDtime">--</span></center>
+            <center> <label for="getAPIdata">Display API data: </label> <button style="margin-left: 10px;" id="getAPIdata">&#x21C4;</button></center>
+            <center> <label for="setAPIdata">Update clock with API data now: </label> <button style="margin-left: 10px;" id="setAPIdata">&#x2713;</button></center>
             
             <script>
                   // API keys
-                  document.getElementById("sendLSkey").addEventListener("click",function() {
-                        var text = document.getElementById("inputLSkey").value;
-                        $.getJSON("/sendLSkey",{text:text}, function(data) {
+                  document.getElementById("sendeventidbutton").addEventListener("click",function() {
+                        var text = document.getElementById("sendeventidinput").value;
+                        $.getJSON("/sendeventid",{text:text}, function(data) {
                               console.log(data);
                         });
                   });
-                  document.getElementById("sendHFkey").addEventListener("click",function() {
-                        var text = document.getElementById("inputHFkey").value;
-                        $.getJSON("/sendHFkey",{text:text}, function(data) {
+                  document.getElementById("sendAPIkeybutton").addEventListener("click",function() {
+                        var text = document.getElementById("sendAPIkeyinput").value;
+                        $.getJSON("/sendAPIkey",{text:text}, function(data) {
                               console.log(data);
                         });
                   });
-                  document.getElementById("sendNSkey").addEventListener("click",function() {
-                        var text = document.getElementById("inputNSkey").value;
-                        $.getJSON("/sendNSkey",{text:text}, function(data) {
-                              console.log(data);
-                        });
-                  });
-                  document.getElementById("getkeys").addEventListener("click",function() {
-                        fetch("/getkeys")
+                  document.getElementById("showkeyidbutton").addEventListener("click",function() {
+                        fetch("/showkeyid")
                               .then(function(response) {
                                     return response.json();
                               })
                               .then(function(data) {
                                     console.log(data);
-                                    document.getElementById("currentLSkey").textContent = data.text1;
-                                    document.getElementById("currentHFkey").textContent = data.text2;
-                                    document.getElementById("currentNSkey").textContent = data.text3;
+                                    document.getElementById("currenteventidbox").textContent = data.text1;
+                                    document.getElementById("currentAPIkeybox").textContent = data.text2
                               });
                   });
+                  document.getElementById("fetchkeyidbutton").addEventListener("click",function() {
+                        fetch("/fetchkeyid")
+                  });
+                  
                   // Manual controls
                   // Reset clock
                   document.getElementById("resetclock").addEventListener("click",function() {
@@ -103,6 +97,15 @@
                         });
                   });
                   // API Controls
+                  
+                  document.getElementById("autoAPIupdatecheckbox").addEventListener("change", function() {
+                      var checked = this.checked;
+
+                      $.getJSON("/autoAPIupdate", {checked: checked}, function(data) {
+                          console.log(data);
+                      });
+                  });
+
                   document.getElementById("getAPIdata").addEventListener("click",function() {
                         fetch("/getAPIdata")
                               .then(function(response) {
@@ -110,10 +113,9 @@
                               })
                               .then(function(data) {
                                     console.log(data);
-                                    document.getElementById("currentLStime").textContent = data.text1;
-                                    document.getElementById("currentHFbool").textContent = data.text2;
-                                    document.getElementById("currentNStime").textContent = data.text3;
-                                    document.getElementById("APIfetcherror").textContent = data.text4;
+                                    document.getElementById("currentHFbool").textContent = data.text1;
+                                    document.getElementById("currentHCUtime").textContent = data.text2;
+                                    document.getElementById("currentHCDtime").textContent = data.text3
                               });
                   });
                   document.getElementById("setAPIdata").addEventListener("click",function() {
