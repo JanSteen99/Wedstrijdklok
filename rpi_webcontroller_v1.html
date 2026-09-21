@@ -14,19 +14,6 @@
             <h1 style="color : #1F2937;"><center> RPi Wedstrijdklok Web Interface </center></h1>
             <hr/><hr>
             
-            <h2> API Keys </h2>
-            
-            <center> <input type="text" id="sendeventidinput" style="width: 500px;" placeholder="Enter custom event id here ...">
-            <button id="sendeventidbutton">Send</button> </center>
-            <center> <input type="text" id="sendAPIkeyinput" style="width: 500px;" placeholder="Enter custom API key here...">
-            <button id="sendAPIkeybutton">Send</button> </center>
-            
-            <center> Current event id and API key </center> 
-            <center> <label for="currenteventidbox"> Event id: </label> <span id="currenteventidbox">--</span></center>
-            <center> <label for="currentAPIkeybox">API key: </label> <span id="currentAPIkeybox">--</span></center>
-            <center> <label for="showkeyidbutton">Display current id and key: </label> <button style="margin-left: 10px;" id="showkeyidbutton">&#x21C4;</button></center>
-            <center> <label for="fetchkeyidbutton">Fetch new id and key: </label> <button style="margin-left: 10px;" id="fetchkeyidbutton">&#x21C4;</button></center>
-            
             <h2> Manual controls </h2>
             <center style="margin-bottom: 10px;"> <label for="resetclock">Reset clock to show current time: </label> <button id="resetclock">&#8635;</button></center>
             <center style="margin-bottom: 10px;"> <label for="toggle10sec">Toggle 10 sec countdown: </label> <button id="toggle10sec">10s</button></center>
@@ -41,6 +28,22 @@
             <center> <label for="getAPIdata">Display API data: </label> <button style="margin-left: 10px;" id="getAPIdata">&#x21C4;</button></center>
             <center> <label for="setAPIdata">Update clock with API data now: </label> <button style="margin-left: 10px;" id="setAPIdata">&#x2713;</button></center>
             
+            
+            <h2> API Configuration </h2>
+            
+            <center> <input type="text" id="sendeventidinput" style="width: 500px;" placeholder="Enter custom event id here ...">
+            <button id="sendeventidbutton">Send</button> </center>
+            <center> <input type="text" id="sendAPIkeyinput" style="width: 500px;" placeholder="Enter custom API key here...">
+            <button id="sendAPIkeybutton">Send</button> </center>
+            
+            <center> Current event id and API key </center> 
+            <center> <label for="currenteventidbox"> Event id: </label> <span id="currenteventidbox">--</span></center>
+            <center> <label for="currentAPIkeybox">API key: </label> <span id="currentAPIkeybox">--</span></center>
+            <center> <label for="showkeyidbutton">Display current id and key: </label> <button style="margin-left: 10px;" id="showkeyidbutton">&#x21C4;</button></center>
+            <center> <label for="fetchkeyidbutton">Fetch new id and key: </label> <button style="margin-left: 10px;" id="fetchkeyidbutton">&#x21C4;</button></center>
+            
+            
+
             <script>
                   // API keys
                   document.getElementById("sendeventidbutton").addEventListener("click",function() {

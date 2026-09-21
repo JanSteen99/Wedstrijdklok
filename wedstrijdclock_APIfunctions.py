@@ -4,11 +4,10 @@
 import requests
 import json
 import xml.etree.ElementTree as ET
-from datetime import datetime, time, date
 
 # Inputs
-IP = "192.168.178.38"  # RR server IP Ziggo
-# IP = "192.168.12.11"  # RR server IP TPLink
+# IP = "192.168.178.38"  # RR server IP Ziggo
+IP = "192.168.12.11"  # RR server IP TPLink
 
 def fetcheventidAPIkey():
 
@@ -44,31 +43,6 @@ def fetcheventidAPIkey():
     
     return foundAPI, eventid, APIkey
 
-def updateclockAPIdata(LS,HF,NS):
-    # Updates clock based on last start, heat finished and next start
-    # Input:
-    # - LS: last start datetime.datetime
-    # - HF: heat finished bool
-    # - NS: next start datetime.datetime
-    if HF:
-        TTS = NS-datetime.now()
-        direction = "down"
-    else:
-        TTS = datetime.now()-LS
-        direction = "up"
-        
-    if TTS.days < 0:
-        TTS = "00:00:00"
-    
-    if TTS.seconds < 10*60*60:
-        TTS = '0'+str(TTS)[:7]
-    else:
-        TTS = str(TTS)[:8]
-        
-    timesleep.sleep(1)
-    transmitcount(TTS,direction)
-    
-    return None
 
 def fetchdata(url):
     response = requests.get(url,timeout=1)
@@ -76,9 +50,15 @@ def fetchdata(url):
     elem = root[0]
     HF = bool(int(elem[0].text))
     HCUtxt= elem[1].text
-    HCU = datetime.combine(date.today(),time(int(HCUtxt[0:2]),int(HCUtxt[3:5]),int(HCUtxt[6:7])))
+    if HCUtxt is not None:
+        HCU = HCUtxt[0:8]
+    else:
+        HCU = "00:00:00" 
     HCDtxt= elem[2].text
-    HCD = datetime.combine(date.today(),time(int(HCDtxt[0:2]),int(HCDtxt[3:5]),int(HCDtxt[6:7])))
+    if HCDtxt is not None:
+        HCD = HCDtxt[0:8]
+    else:
+        HCD = "00:00:00"    
     return HF, HCU, HCD
 
 # foundAPI, eventid, APIkey = fetcheventidAPIkey()

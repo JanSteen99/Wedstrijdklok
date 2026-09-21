@@ -6,12 +6,23 @@
 delay = 0.05
 
 import time as timesleep
-from datetime import datetime, time, date
 import pigpio
 from ircodec.command import CommandSet
 
 pi = pigpio.pi()
 clockremote = CommandSet.load('wedstrijdklokcommandos_v1.json')
+
+def updateclockAPIdata(HF, HCU, HCD):
+    # Updates clock based on last start, heat count up and down
+    # Input:
+    # - HF: heat finished bool
+    # - HCU: count up time from previous start ("HH:MM:SS")
+    # - HCD: count down time to next start ("HH:MM:SS")
+    if HF:
+        transmitcount(HCD,"down")
+    else:
+        transmitcount(HCU,"up") 
+    return None
 
 def resetclock():
     # Resets the clock to show the current time

@@ -5,23 +5,48 @@
 import os
 import pigpio
 from flask import Flask, render_template, Response, request, jsonify
-import datetime
+import threading
 
 import wedstrijdclock_clockfunctions as clock
 import wedstrijdclock_APIfunctions as API
+import time
 
 # Inputs
-bluepin = 16
-greenpin = 6
-redpin = 5
+bluepin = 16 #GPIO pin
+greenpin = 6 #GPIO pin
+redpin = 5 #GPIO pin
 eventid = "0"
 APIkey = "0"
+autoupdate = False
 
 # Script
 pi = pigpio.pi()
 dataPin=[i for i in range(2,28)]
 for dp in dataPin:
     pi.set_mode(dp,pigpio.OUTPUT)
+
+def autoupdate_checker():
+    url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+    HF, HCU, HCD = API.fetchdata(url)
+    HFold = HF
+    while True:
+        
+        if autoupdate:
+            print("Autoupdate is enabled - checking changes in HF")
+            
+            try:
+                url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+                HF, HCU, HCD = API.fetchdata(url)
+                if HFold != HF:
+                    clock.updateclockAPIdata(HF, HCU, HCD)
+                    HFold = HF
+            except Exception as e:
+                print(e)
+                pi.write(redpin,1)
+                pi.write(greenpin,0)
+                pi.write(bluepin,0)
+
+        time.sleep(5)  # check every 10 seconds for a change
 
 templateData={
     'title':'RPi Wedstrijdklok Web Interface'
@@ -37,15 +62,19 @@ def index():
         'title':'Raspberry Pi 3B+ Web Controller'
     }
     #return render_template('rpi_index.html',**templateData)
-    return render_template('rpi_webcontroller.html',**templateData)           
+    return render_template('rpi_webcontroller_v2.html',**templateData)
+#     return "Flask is working!"
 # @app.route("/testjquery")
 # def testjquery():
 #     return app.send_static_file("jquery.min.js")
 @app.route('/<actionid>')
 def handleRequest(actionid):
-    global eventid, APIkey, connectionfound
+    global eventid, APIkey, connectionfound, autoupdate
+    
     if not actionid == "favicon.ico":
+        
         errorfound=False
+        
         try:
             
             print("Button pressed with action id: ",actionid)
@@ -88,26 +117,24 @@ def handleRequest(actionid):
                     
             elif actionid == "autoAPIupdate":
                 if checked == "true":
-                    print("Yey im ticked")
-                    pass
+                    autoupdate = True
                 else:
-                    print("No im un-ticked")
-                    pass
+                    autoupdate = False
+                
             elif actionid == "getAPIdata":
                 print("Sending API data to HTML")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
                 HF, HCU, HCD = API.fetchdata(url)
                 return jsonify(text1=HF,
-                               text2=HCU.strftime("%H:%M:%S"),
-                               text3=HCD.strftime("%H:%M:%S"))
+                               text2=HCU,
+                               text3=HCD)
+            
             elif actionid == "setAPIdata":
                 print("Updating clock based on API data!")
-                LS, HF, NS, ex = clock.fetchAPIdata()
-                if ex == None:
-                    clock.updateclockAPIdata(LS,HF,NS)
-                else:
-                    print("Couldn't due to error")
-          
+                url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+                HF, HCU, HCD = API.fetchdata(url)
+                clock.updateclockAPIdata(HF, HCU, HCD)
+        
         except Exception as e:
             print(e)
             errorfound=True
@@ -134,17 +161,37 @@ if __name__=='__main__':
     ## Initialize
     clock.resetclock()
     clock.toggle10sectimer()
+    clock.transmitcount("00:00:00","up")
+    time.sleep(11)
+    clock.resetclock()
+    
     pi.write(redpin,0)
     pi.write(greenpin,0)
     pi.write(bluepin,0)
 #     print(app.url_map)
 #     print(app.static_folder)
 #     print(os.path.exists(os.path.join(app.static_folder,"jquery.min.js")))
-    foundAPI, eventid, APIkey = API.fetcheventidAPIkey()
-    if foundAPI:
-        connectionfound = True
-    else:
-        connectionfound = False
+    try:
+        foundAPI, eventid, APIkey = API.fetcheventidAPIkey()
+        if foundAPI:
+            connectionfound = True
+            pi.write(redpin,0)
+            pi.write(greenpin,1)
+            pi.write(bluepin,0)
+        else:
+            connectionfound = False
+            pi.write(redpin,0)
+            pi.write(greenpin,0)
+            pi.write(bluepin,1)
+        
+        updater = threading.Thread(target=autoupdate_checker,daemon=True)
+        updater.start()
+                
+    except Exception as e:
+        print(e)
+        pi.write(redpin,1)
+        pi.write(greenpin,0)
+        pi.write(bluepin,0)
     ## Run web application
     app.run(debug=True, port=5000, host='0.0.0.0',threaded=True, use_reloader=False)
     #local web server http://192.168.1.200:5000/
