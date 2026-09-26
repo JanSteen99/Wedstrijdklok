@@ -6,8 +6,8 @@ import json
 import xml.etree.ElementTree as ET
 
 # Inputs
-# IP = "192.168.178.38"  # RR server IP Ziggo
-IP = "192.168.12.11"  # RR server IP TPLink
+IP = "192.168.178.38"  # RR server IP Ziggo
+# IP = "192.168.12.11"  # RR server IP TPLink
 
 def fetcheventidAPIkey():
 
@@ -24,7 +24,7 @@ def fetcheventidAPIkey():
 
     if foundAPI:
         
-        eventid = r.json()[0]["ID"]
+        eventid = str(r.json()[0]["ID"])
         print(eventid)
 
         url2 = f"http://{IP}/_{eventid}/api/simpleapi/get"
@@ -38,7 +38,7 @@ def fetcheventidAPIkey():
         
         if foundAPI:
             
-            APIkey = r.json()[0]["Key"]
+            APIkey = str(r.json()[0]["Key"])
             print(APIkey)
     
     return foundAPI, eventid, APIkey
@@ -58,8 +58,13 @@ def fetchdata(url):
     if HCDtxt is not None:
         HCD = HCDtxt[0:8]
     else:
-        HCD = "00:00:00"    
-    return HF, HCU, HCD
+        HCD = "00:00:00"
+    HLtxt= elem[3].text
+    if HLtxt is not None:
+        HL = HLtxt[0:8]
+    else:
+        HL = "00:00:00"
+    return HF, HCU, HCD, HL
 
 # foundAPI, eventid, APIkey = fetcheventidAPIkey()
 # url = "http://"+IP+"/_"+eventid+"/api/"+APIkey

@@ -442,7 +442,12 @@
 
     <label class="checkbox-row">
         <input type="checkbox" id="autoAPIupdatecheckbox">
-        <span>Update clock automatically with API</span>
+        <span>Update clock automatically every 5 sec</span>
+    </label>
+    
+    <label class="checkbox-row">
+        <input type="checkbox" id="showinglapscheckbox">
+        <span>Display laps instead of time </span>
     </label>
 
     <div class="api-data">
@@ -460,6 +465,11 @@
         <div class="data-row">
             <span class="data-label">Heat count down</span>
             <span class="data-value" id="currentHCDtime">--</span>
+        </div>
+        
+        <div class="data-row">
+            <span class="data-label">Heat laps</span>
+            <span class="data-value" id="currentHLtime">--</span>
         </div>
 
     </div>
@@ -607,6 +617,14 @@ document.getElementById("autoAPIupdatecheckbox").addEventListener("change", func
     });
 });
 
+document.getElementById("showinglapscheckbox").addEventListener("change", function() {
+    var checked = this.checked;
+
+    $.getJSON("/showinglaps", {checked: checked}, function(data) {
+        console.log(data);
+    });
+});
+
 document.getElementById("getAPIdata").addEventListener("click",function() {
     fetch("/getAPIdata")
         .then(function(response) {
@@ -616,7 +634,8 @@ document.getElementById("getAPIdata").addEventListener("click",function() {
             console.log(data);
             document.getElementById("currentHFbool").textContent = data.text1;
             document.getElementById("currentHCUtime").textContent = data.text2;
-            document.getElementById("currentHCDtime").textContent = data.text3
+            document.getElementById("currentHCDtime").textContent = data.text3;
+            document.getElementById("currentHLtime").textContent = data.text4
         });
 });
 

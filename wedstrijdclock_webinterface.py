@@ -18,6 +18,7 @@ redpin = 5 #GPIO pin
 eventid = "0"
 APIkey = "0"
 autoupdate = False
+showlaps = False
 
 # Script
 pi = pigpio.pi()
@@ -27,19 +28,26 @@ for dp in dataPin:
 
 def autoupdate_checker():
     url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-    HF, HCU, HCD = API.fetchdata(url)
+    HF, HCU, HCD, HL = API.fetchdata(url)
     HFold = HF
+    HLold = HL
+    
     while True:
         
         if autoupdate:
-            print("Autoupdate is enabled - checking changes in HF")
+            print("Autoupdate is enabled - checking changes in HF or HL")
             
             try:
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD = API.fetchdata(url)
-                if HFold != HF:
-                    clock.updateclockAPIdata(HF, HCU, HCD)
-                    HFold = HF
+                HF, HCU, HCD, HL = API.fetchdata(url)
+                if showlaps:
+                    if HLold != HL:
+                        clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                        HLold = HL
+                else:
+                    if HFold != HF:
+                        clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                        HFold = HF
             except Exception as e:
                 print(e)
                 pi.write(redpin,1)
@@ -69,7 +77,7 @@ def index():
 #     return app.send_static_file("jquery.min.js")
 @app.route('/<actionid>')
 def handleRequest(actionid):
-    global eventid, APIkey, connectionfound, autoupdate
+    global eventid, APIkey, connectionfound, autoupdate, showlaps
     
     if not actionid == "favicon.ico":
         
@@ -120,20 +128,25 @@ def handleRequest(actionid):
                     autoupdate = True
                 else:
                     autoupdate = False
-                
+            elif actionid == "showinglaps":
+                if checked == "true":
+                    showlaps = True
+                else:
+                    showlaps = False    
             elif actionid == "getAPIdata":
                 print("Sending API data to HTML")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD = API.fetchdata(url)
+                HF, HCU, HCD, HL = API.fetchdata(url)
                 return jsonify(text1=HF,
                                text2=HCU,
-                               text3=HCD)
+                               text3=HCD,
+                               text4=HL)
             
             elif actionid == "setAPIdata":
                 print("Updating clock based on API data!")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD = API.fetchdata(url)
-                clock.updateclockAPIdata(HF, HCU, HCD)
+                HF, HCU, HCD, HL = API.fetchdata(url)
+                clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
         
         except Exception as e:
             print(e)
@@ -159,11 +172,12 @@ if __name__=='__main__':
 #     os.system("sudo rm -r  ~/.cache/chromium/Default/Cache/*")
     
     ## Initialize
-    clock.resetclock()
+    clock.resetclock(clock.static)
+    clock.resetclock(not clock.static)
     clock.toggle10sectimer()
     clock.transmitcount("00:00:00","up")
     time.sleep(11)
-    clock.resetclock()
+    clock.resetclock(clock.static)
     
     pi.write(redpin,0)
     pi.write(greenpin,0)
