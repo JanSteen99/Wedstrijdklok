@@ -95,7 +95,7 @@ def handleRequest(actionid):
             print("Check received: ",checked," type ",type(checked))
             
             if actionid == "resetclock":
-                clock.resetclock()
+                clock.resetclock(clock.static)
             elif actionid == "toggle10sec":
                 clock.toggle10sectimer()
                 
@@ -124,11 +124,13 @@ def handleRequest(actionid):
                     clock.transmitcount(timeuser,"down")
                     
             elif actionid == "autoAPIupdate":
+                print("Toggling autoupdate API data")
                 if checked == "true":
                     autoupdate = True
                 else:
                     autoupdate = False
             elif actionid == "showinglaps":
+                print("Toggling show rounds")
                 if checked == "true":
                     showlaps = True
                 else:

@@ -39,7 +39,7 @@ def resetclock(static):
     timesleep.sleep(delay)
     clockremote.emit('ok')
     if static:
-        timesleep.sleep(11) # In case 10 sec timer is on
+        # timesleep.sleep(11) # In case 10 sec timer is on
         timesleep.sleep(delay)
         clockremote.emit('ok')
     timesleep.sleep(delay)

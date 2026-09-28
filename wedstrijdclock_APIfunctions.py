@@ -6,8 +6,8 @@ import json
 import xml.etree.ElementTree as ET
 
 # Inputs
-IP = "192.168.178.38"  # RR server IP Ziggo
-# IP = "192.168.12.11"  # RR server IP TPLink
+#IP = "192.168.178.38"  # RR server IP Ziggo
+IP = "192.168.12.11"  # RR server IP TPLink
 
 def fetcheventidAPIkey():
 
@@ -49,16 +49,16 @@ def fetchdata(url):
     root = ET.fromstring(response.content)
     elem = root[0]
     HF = bool(int(elem[0].text))
-    HCUtxt= elem[1].text
-    if HCUtxt is not None:
-        HCU = HCUtxt[0:8]
-    else:
-        HCU = "00:00:00" 
-    HCDtxt= elem[2].text
+    HCDtxt= elem[1].text
     if HCDtxt is not None:
         HCD = HCDtxt[0:8]
     else:
         HCD = "00:00:00"
+    HCUtxt= elem[2].text
+    if HCUtxt is not None:
+        HCU = HCUtxt[0:8]
+    else:
+        HCU = "00:00:00"
     HLtxt= elem[3].text
     if HLtxt is not None:
         HL = HLtxt[0:8]
