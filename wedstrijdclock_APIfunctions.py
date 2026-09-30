@@ -45,26 +45,37 @@ def fetcheventidAPIkey():
 
 
 def fetchdata(url):
-    response = requests.get(url,timeout=1)
-    root = ET.fromstring(response.content)
-    elem = root[0]
-    HF = bool(int(elem[0].text))
-    HCDtxt= elem[1].text
-    if HCDtxt is not None:
-        HCD = HCDtxt[0:8]
+    foundAPI = True
+    try:
+        response = requests.get(url,timeout=1)
+    except Exception as e:
+        print(e)
+        foundAPI = False    
+    if foundAPI:
+        root = ET.fromstring(response.content)
+        elem = root[0]
+        HF = bool(int(elem[0].text))
+        HCDtxt= elem[1].text
+        if HCDtxt is not None:
+            HCD = HCDtxt[0:8]
+        else:
+            HCD = "00:00:00"
+        HCUtxt= elem[2].text
+        if HCUtxt is not None:
+            HCU = HCUtxt[0:8]
+        else:
+            HCU = "00:00:00"
+        HLtxt= elem[3].text
+        if HLtxt is not None:
+            HL = HLtxt[0:8]
+        else:
+            HL = "00:00:00"
     else:
-        HCD = "00:00:00"
-    HCUtxt= elem[2].text
-    if HCUtxt is not None:
-        HCU = HCUtxt[0:8]
-    else:
+        HF = 0
         HCU = "00:00:00"
-    HLtxt= elem[3].text
-    if HLtxt is not None:
-        HL = HLtxt[0:8]
-    else:
+        HCD = "00:00:00"
         HL = "00:00:00"
-    return HF, HCU, HCD, HL
+    return foundAPI, HF, HCU, HCD, HL
 
 # foundAPI, eventid, APIkey = fetcheventidAPIkey()
 # url = "http://"+IP+"/_"+eventid+"/api/"+APIkey

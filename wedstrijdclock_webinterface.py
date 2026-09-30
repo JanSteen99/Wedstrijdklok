@@ -28,7 +28,7 @@ for dp in dataPin:
 
 def autoupdate_checker():
     url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-    HF, HCU, HCD, HL = API.fetchdata(url)
+    foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
     HFold = HF
     HLold = HL
     
@@ -39,15 +39,20 @@ def autoupdate_checker():
             
             try:
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD, HL = API.fetchdata(url)
-                if showlaps:
-                    if HLold != HL:
-                        clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
-                        HLold = HL
+                foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
+                if foundAPI:
+                    if showlaps:
+                        if HLold != HL:
+                            clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                            HLold = HL
+                    else:
+                        if HFold != HF:
+                            clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                            HFold = HF
                 else:
-                    if HFold != HF:
-                        clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
-                        HFold = HF
+                    pi.write(redpin,0)
+                    pi.write(greenpin,0)
+                    pi.write(bluepin,1)
             except Exception as e:
                 print(e)
                 pi.write(redpin,1)
@@ -138,7 +143,11 @@ def handleRequest(actionid):
             elif actionid == "getAPIdata":
                 print("Sending API data to HTML")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD, HL = API.fetchdata(url)
+                foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
+                if foundAPI:
+                    connectionfound = True
+                else:
+                    connectionfound = False
                 return jsonify(text1=HF,
                                text2=HCU,
                                text3=HCD,
@@ -147,8 +156,13 @@ def handleRequest(actionid):
             elif actionid == "setAPIdata":
                 print("Updating clock based on API data!")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
-                HF, HCU, HCD, HL = API.fetchdata(url)
-                clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
+                if foundAPI:
+                    connectionfound = True
+                    clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
+                else:
+                    connectionfound = False
+                
         
         except Exception as e:
             print(e)
