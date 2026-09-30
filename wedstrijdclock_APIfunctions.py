@@ -11,48 +11,50 @@ IP = "192.168.12.11"  # RR server IP TPLink
 
 def fetcheventidAPIkey():
 
-    eventid = 0
+    eventid = "0"
     APIkey = "0"
 
     url1 = f"http://{IP}/api/local/eventlist"
     foundAPI = True
     try:
         r = requests.get(url1, params={"lang": "en"}, timeout=5)
+        eventid = str(r.json()[0]["ID"])
+        print(eventid)
+        
     except Exception as e:
         print(e)
         foundAPI = False
-
+        
     if foundAPI:
         
-        eventid = str(r.json()[0]["ID"])
-        print(eventid)
-
         url2 = f"http://{IP}/_{eventid}/api/simpleapi/get"
         
         try:
             r = requests.get(url2, params={"lang": "en", "pw": "0"}, timeout=5)
-        
+            APIkey = str(r.json()[0]["Key"])
+            print(APIkey)
+            
         except Exception as e:
             print(e)
             foundAPI = False
-        
-        if foundAPI:
-            
-            APIkey = str(r.json()[0]["Key"])
-            print(APIkey)
     
     return foundAPI, eventid, APIkey
 
 
 def fetchdata(url):
+    
     foundAPI = True
+    
     try:
         response = requests.get(url,timeout=1)
+        content = response.content
+        root = ET.fromstring(content)
+        
     except Exception as e:
         print(e)
-        foundAPI = False    
+        foundAPI = False  
+ 
     if foundAPI:
-        root = ET.fromstring(response.content)
         elem = root[0]
         HF = bool(int(elem[0].text))
         HCDtxt= elem[1].text

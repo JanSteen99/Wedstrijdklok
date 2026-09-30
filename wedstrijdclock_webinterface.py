@@ -87,6 +87,7 @@ def handleRequest(actionid):
     if not actionid == "favicon.ico":
         
         errorfound=False
+        connectionfound = True
         
         try:
             
@@ -117,9 +118,7 @@ def handleRequest(actionid):
             elif actionid == "fetchkeyid":
                 print("Retry fetching eventid and APIkey from RR webapp")
                 foundAPI, eventid, APIkey = API.fetcheventidAPIkey()
-                if foundAPI:
-                    connectionfound = True
-                else:
+                if not foundAPI:
                     connectionfound = False
             
             elif timeuser:
@@ -144,10 +143,12 @@ def handleRequest(actionid):
                 print("Sending API data to HTML")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
                 foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
-                if foundAPI:
-                    connectionfound = True
-                else:
+                if not foundAPI:
                     connectionfound = False
+                    pi.write(redpin,0)
+                    pi.write(greenpin,0)
+                    pi.write(bluepin,1)
+                    
                 return jsonify(text1=HF,
                                text2=HCU,
                                text3=HCD,
@@ -157,11 +158,10 @@ def handleRequest(actionid):
                 print("Updating clock based on API data!")
                 url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
                 foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
-                if foundAPI:
-                    connectionfound = True
-                    clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
-                else:
+                if not foundAPI:
                     connectionfound = False
+                else:
+                    clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
                 
         
         except Exception as e:
