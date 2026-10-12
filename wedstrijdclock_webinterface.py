@@ -10,6 +10,7 @@ import threading
 import wedstrijdclock_clockfunctions as clock
 import wedstrijdclock_APIfunctions as API
 import time
+from datetime import datetime
 
 # Inputs
 bluepin = 16 #GPIO pin
@@ -17,8 +18,11 @@ greenpin = 6 #GPIO pin
 redpin = 5 #GPIO pin
 eventid = "0"
 APIkey = "0"
-autoupdate = False
+IP = "192.168.12.11"  # RR server IP TPLink
+#IP = "192.168.178.38"  # RR server IP Ziggo
+autoupdate = True
 showlaps = False
+updateperiod = 5 # Period to check for autoupdates (seconds)
 
 # Script
 pi = pigpio.pi()
@@ -26,19 +30,31 @@ dataPin=[i for i in range(2,28)]
 for dp in dataPin:
     pi.set_mode(dp,pigpio.OUTPUT)
 
+def getsecdifference(time1,time2):
+    # Obtains the difference in seconds between two time-strings such as HCU and HCD
+    # Input:
+    # - time1: first time ("HH:MM:SS")
+    # - time2: second time to compare with ("HH:MM:SS")
+    t1 = datetime.strptime(time1, "%H:%M:%S")
+    t2 = datetime.strptime(time2, "%H:%M:%S")
+    diff_seconds = abs((t2 - t1).total_seconds())
+    return diff_seconds
+
 def autoupdate_checker():
-    url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+    url = "http://"+IP+"/_"+eventid+"/api/"+APIkey
     foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
     HFold = HF
     HLold = HL
+    HCUold = HCU
+    HCDold = HCD
     
     while True:
         
         if autoupdate:
-            print("Autoupdate is enabled - checking changes in HF or HL")
+            print("Autoupdate is enabled - checking changes in HF, HL or signficant differences in HCU or HCD")
             
             try:
-                url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+                url = "http://"+IP+"/_"+eventid+"/api/"+APIkey
                 foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
                 if foundAPI:
                     if showlaps:
@@ -46,9 +62,11 @@ def autoupdate_checker():
                             clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
                             HLold = HL
                     else:
-                        if HFold != HF:
+                        if HFold != HF or getsecdifference(HCU,HCUold)>2*updateperiod or getsecdifference(HCD,HCDold)>2*updateperiod:
                             clock.updateclockAPIdata(HF, HCU, HCD, HL, showlaps)
                             HFold = HF
+                        HCDold = HCD
+			HCUold = HCU
                 else:
                     pi.write(redpin,0)
                     pi.write(greenpin,0)
@@ -59,7 +77,7 @@ def autoupdate_checker():
                 pi.write(greenpin,0)
                 pi.write(bluepin,0)
 
-        time.sleep(5)  # check every 10 seconds for a change
+        time.sleep(updateperiod)  
 
 templateData={
     'title':'RPi Wedstrijdklok Web Interface'
@@ -82,7 +100,7 @@ def index():
 #     return app.send_static_file("jquery.min.js")
 @app.route('/<actionid>')
 def handleRequest(actionid):
-    global eventid, APIkey, connectionfound, autoupdate, showlaps
+    global IP, eventid, APIkey, connectionfound, autoupdate, showlaps
     
     if not actionid == "favicon.ico":
         
@@ -105,19 +123,23 @@ def handleRequest(actionid):
             elif actionid == "toggle10sec":
                 clock.toggle10sectimer()
                 
-            elif actionid == "showkeyid":
+            elif actionid == "showkeyidip":
                 print("Sending eventID and API keys to HTML")
                 return jsonify(text1=eventid,
-                               text2=APIkey)
+                               text2=APIkey,
+				text3=IP)
             elif actionid == "sendeventid":
                 print("Setting event id from HTML")
                 eventid = str(text)
             elif actionid == "sendAPIkey":
                 print("Setting API key from HTML")
                 APIkey = str(text)
+	    elif actionid == "sendIP":
+                print("Setting RR server IP from HTML")
+                IP = str(text)
             elif actionid == "fetchkeyid":
                 print("Retry fetching eventid and APIkey from RR webapp")
-                foundAPI, eventid, APIkey = API.fetcheventidAPIkey()
+                foundAPI, eventid, APIkey = API.fetcheventidAPIkey(IP)
                 if not foundAPI:
                     connectionfound = False
             
@@ -141,7 +163,7 @@ def handleRequest(actionid):
                     showlaps = False    
             elif actionid == "getAPIdata":
                 print("Sending API data to HTML")
-                url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+                url = "http://"+IP+"/_"+eventid+"/api/"+APIkey
                 foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
                 if not foundAPI:
                     connectionfound = False
@@ -156,7 +178,7 @@ def handleRequest(actionid):
             
             elif actionid == "setAPIdata":
                 print("Updating clock based on API data!")
-                url = "http://"+API.IP+"/_"+eventid+"/api/"+APIkey
+                url = "http://"+IP+"/_"+eventid+"/api/"+APIkey
                 foundAPI, HF, HCU, HCD, HL = API.fetchdata(url)
                 if not foundAPI:
                     connectionfound = False
@@ -202,7 +224,7 @@ if __name__=='__main__':
 #     print(app.static_folder)
 #     print(os.path.exists(os.path.join(app.static_folder,"jquery.min.js")))
     try:
-        foundAPI, eventid, APIkey = API.fetcheventidAPIkey()
+        foundAPI, eventid, APIkey = API.fetcheventidAPIkey(IP)
         if foundAPI:
             connectionfound = True
             pi.write(redpin,0)

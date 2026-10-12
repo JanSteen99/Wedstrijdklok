@@ -54,7 +54,7 @@ def toggle10sectimer():
     clockremote.emit('updn')
     timesleep.sleep(delay)
     clockremote.emit('10s')
-    timesleep.sleep(delay)
+    timesleep.sleep(1) # This specific command takes longer
     clockremote.emit('clock')
     return None
 

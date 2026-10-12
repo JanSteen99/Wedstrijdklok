@@ -441,7 +441,7 @@
     </div>
 
     <label class="checkbox-row">
-        <input type="checkbox" id="autoAPIupdatecheckbox">
+        <input type="checkbox" id="autoAPIupdatecheckbox" checked>
         <span>Update clock automatically every 5 sec</span>
     </label>
     
@@ -497,6 +497,15 @@
     <div class="api-config-row">
         <input
             type="text"
+            id="sendIPinput"
+            placeholder="Enter custom IP address rr server here ..."
+        >
+        <button id="sendIPbutton">Send</button>
+    </div>
+
+    <div class="api-config-row">
+        <input
+            type="text"
             id="sendeventidinput"
             placeholder="Enter custom event id here ..."
         >
@@ -514,6 +523,11 @@
 
     <div class="current-values">
 
+	<div class="data-row">
+            <span class="data-label">IP address rr server</span>
+            <span class="data-value" id="currentIPbox">--</span>
+        </div>
+
         <div class="data-row">
             <span class="data-label">Event ID</span>
             <span class="data-value" id="currenteventidbox">--</span>
@@ -528,14 +542,14 @@
 
     <div class="action-row">
         <button
-            id="showkeyidbutton"
+            id="showkeyidipbutton"
             class="secondary-button"
         >
-            &#x21C4; &nbsp; Display current ID and key
+            &#x21C4; &nbsp; Display current IP, event ID and key
         </button>
 
         <button id="fetchkeyidbutton">
-            &#x21C4; &nbsp; Fetch new ID and key
+            &#x21C4; &nbsp; Auto fetch new event ID and key
         </button>
     </div>
 
@@ -546,7 +560,14 @@
 </div>
 
 </div> <script> // API keys
-      
+   
+document.getElementById("sendIPbutton").addEventListener("click",function() {
+      var text = document.getElementById("sendIPinput").value;
+      $.getJSON("/sendIP",{text:text}, function(data) {
+            console.log(data);
+      });
+});
+   
 document.getElementById("sendeventidbutton").addEventListener("click",function() {
       var text = document.getElementById("sendeventidinput").value;
       $.getJSON("/sendeventid",{text:text}, function(data) {
@@ -561,15 +582,16 @@ document.getElementById("sendAPIkeybutton").addEventListener("click",function() 
     });
 });
 
-document.getElementById("showkeyidbutton").addEventListener("click",function() {
-    fetch("/showkeyid")
+document.getElementById("showkeyidipbutton").addEventListener("click",function() {
+    fetch("/showkeyidip")
         .then(function(response) {
             return response.json();
         })
         .then(function(data) {
             console.log(data);
             document.getElementById("currenteventidbox").textContent = data.text1;
-            document.getElementById("currentAPIkeybox").textContent = data.text2
+            document.getElementById("currentAPIkeybox").textContent = data.text2;
+	    document.getElementById("currentIPbox").textContent = data.text3
         });
 });
 
