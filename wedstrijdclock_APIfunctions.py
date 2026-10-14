@@ -6,10 +6,9 @@ import json
 import xml.etree.ElementTree as ET
 
 # Inputs
-#IP = "192.168.178.38"  # RR server IP Ziggo
-IP = "192.168.12.11"  # RR server IP TPLink
+# None
 
-def fetcheventidAPIkey():
+def fetcheventidAPIkey(IP):
 
     eventid = "0"
     APIkey = "0"
